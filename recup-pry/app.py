@@ -1,4 +1,5 @@
 import math
+import time
 from flask import Flask, render_template, request
 
 app = Flask(__name__)
@@ -53,10 +54,9 @@ def calcular_producto_interno_normalizado(documentos, consulta, vocabulario):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
+        start_time = time.time()
         num_documentos = int(request.form.get("num_documentos", 0))
-        # documentos = [request.form['documento{}'.format(i)] for i in range(num_documentos)]      
         documentos = [eliminar_palabras_comunes(request.form['documento{}'.format(i)]) for i in range(num_documentos)]
-        # consulta = eliminar_palabras_comunes(request.form['consulta'].lower().split())
         consulta = eliminar_palabras_comunes(request.form['consulta'])
         vocabulario = crear_vocabulario(documentos)
         vector_consulta = [consulta.count(palabra) for palabra in vocabulario]
@@ -75,7 +75,11 @@ def index():
                 max_doc_id = [doc_id+1]
             elif similitud == max_similitud:
                 max_doc_id.append(doc_id+1)
-        print("\nEl documento con mayor similitud es d", max_doc_id,"\n\n")
+        print("\nEl documento con mayor similitud es d", max_doc_id)
+        #Tiempo
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print("Tiempo de ejecución: {:.6f} segundos".format(execution_time),"\n\n")
         return render_template('index.html', tabla_similitud=tabla_similitud,vocabulario=vocabulario,documentos=documentos,consulta=consulta,max_doc_id=max_doc_id)
     return render_template('index.html')
 
