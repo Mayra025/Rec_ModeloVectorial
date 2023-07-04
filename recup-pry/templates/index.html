@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Modelo Vectorial</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+	<style>
+		body {
+			padding-top: 50px;
+			padding-bottom: 50px;
+		}
+
+		.form-consulta {
+			max-width: 400px;
+			margin: 0 auto;
+		}
+	</style>
+</head>
+
+<body>
+	<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+		<a class="navbar-brand text-center" href="#">Modelo Vectorial - Cálculo del Producto Interno Normalizado</a>
+	</nav>
+	<br>
+	<div class="container">
+		<h5>Ingrese los datos:</h5>
+		<form method="POST" class="form-consulta">
+			<div class="form-group">
+				<label for="num_documentos">N° de documentos de la colección:</label>
+				<input type="number" id="num_documentos" name="num_documentos" class="form-control">
+			</div>
+			<button type="button" class="btn btn-primary" onclick="agregarDocumentos()">Agregar Documentos</button>
+			<br><br>
+
+			<div id="documentos"></div><br>
+
+			<div class="form-group">
+				<label for="consulta">Contenido de la consulta (separado por espacios):</label>
+				<input type="text" id="consulta" name="consulta" class="form-control">
+			</div>
+
+			<button type="submit" class="btn btn-success">Calcular Similitud</button>
+		</form>
+		<br><br>
+
+		{% if tabla_similitud %}
+		<h2>Resultados</h2>
+		<h5>Vocabulario: {{vocabulario}} </h5>
+		<br>
+
+		<h5>Documentos:</h5>
+		<ul>
+			{% for doc in documentos %}
+			<li>{{ doc }}</li>
+			{% endfor %}
+		</ul>
+		<br>
+
+		<h5>Tabla de Similitud: a la consulta {{consulta}}</h5>
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Documento</th>
+					<th>Producto interno</th>
+					<th>|d|</th>
+					<th>|q|</th>
+					<th>sim(q, d)</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for row in tabla_similitud %}
+				<tr>
+					<td>{{ row[0]+1 }}</td>
+					<td>{{ row[1] }}</td>
+					<td>{{ row[2] }}</td>
+					<td>{{ row[3] }}</td>
+					<td>{{ row[4] }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+		:: El documento más relevante a la consulta es d{{max_doc_id}}
+		{% endif %}
+	</div>
+
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+	<script>
+		function agregarDocumentos() {
+			var numDocumentos = document.getElementById("num_documentos").value;
+			var documentosDiv = document.getElementById("documentos");
+			documentosDiv.innerHTML = "";
+			for (var i = 0; i < numDocumentos; i++) {
+				var documentoInput = document.createElement("input");
+				documentoInput.type = "text";
+				documentoInput.name = "documento" + i;
+				documentoInput.placeholder = (i + 1) + " Ingrese el contenido del doc. separado por espacios ";
+				documentosDiv.appendChild(documentoInput);
+				documentosDiv.appendChild(document.createElement("br"));
+			}
+		}
+	</script>
+</body>
+
+</html>
