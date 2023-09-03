@@ -2,7 +2,7 @@
 <html>
 
 <head>
-	<title>Modelo Vectorial</title>
+	<title>Modelo Vectorial - Realimentación</title>
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 	<style>
 		body {
@@ -19,12 +19,12 @@
 
 <body>
 	<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-		<a class="navbar-brand text-center" href="#">Modelo Vectorial - Cálculo del Producto Interno Normalizado</a>
+		<a class="navbar-brand text-center" href="#">Modelo Vectorial - Cálculo Consulta Realimentada</a>
 	</nav>
 	<br>
 	<div class="container">
 		<h5>Ingrese los datos:</h5>
-		<form method="POST" class="form-consulta">
+		<form method="POST" class="form-consulta" enctype="multipart/form-data">
 			<div class="form-group">
 				<label for="num_documentos">N° de documentos de la colección:</label>
 				<input type="number" id="num_documentos" name="num_documentos" class="form-control">
@@ -32,72 +32,258 @@
 			<button type="button" class="btn btn-primary" onclick="agregarDocumentos()">Agregar Documentos</button>
 			<br><br>
 
-			<div id="documentos"></div><br>
+			<div id="documentos"> </div><br>
 
 			<div class="form-group">
 				<label for="consulta">Contenido de la consulta (separado por espacios):</label>
 				<input type="text" id="consulta" name="consulta" class="form-control">
 			</div>
-
-			<button type="submit" class="btn btn-success">Calcular Similitud</button>
+			<button type="submit" class="btn btn-success" id="proceso-og">Calcular Similitud</button>
 		</form>
 		<br><br>
+		<div id="proceso">
+			{% if tabla_similitud %}
+			<h2>Resultados</h2>
+			<h5>Vocabulario: {{vocabulario}} </h5>
+			<br>
 
-		{% if tabla_similitud %}
-		<h2>Resultados</h2>
-		<h5>Vocabulario: {{vocabulario}} </h5>
-		<br>
-
-		<h5>Documentos:</h5>
-		<ul>
-			{% for doc in documentos %}
-			<li>{{ doc }}</li>
-			{% endfor %}
-		</ul>
-		<br>
-
-		<h5>Tabla de Similitud: a la consulta {{consulta}}</h5>
-		<table class="table">
-			<thead>
-				<tr>
-					<th>Documento</th>
-					<th>Producto interno</th>
-					<th>|d|</th>
-					<th>|q|</th>
-					<th>sim(q, d)</th>
-				</tr>
-			</thead>
-			<tbody>
-				{% for row in tabla_similitud %}
-				<tr>
-					<td>{{ row[0]+1 }}</td>
-					<td>{{ row[1] }}</td>
-					<td>{{ row[2] }}</td>
-					<td>{{ row[3] }}</td>
-					<td>{{ row[4] }}</td>
-				</tr>
+			<h5>Documentos:</h5>
+			<ol>
+				{% for doc in documentos %}
+				<li>{{ doc }}</li>
 				{% endfor %}
-			</tbody>
-		</table>
-		:: El documento más relevante a la consulta es d{{max_doc_id}}
-		{% endif %}
+			</ol>
+			<br>
+
+			<h5>Consulta original:</h5>
+			<ul>
+				<li>{{ consulta }}</li>
+			</ul>
+			<br>
+
+			<h5>Tabla de Similitud de: {{consulta}}</h5>
+			<table class="table" id="tabla-og">
+				<thead>
+					<tr>
+						<th>R/NR?</th>
+						<th>Doc.</th>
+						<th>Producto interno</th>
+						<th>|d|</th>
+						<th>|q|</th>
+						<th>sim(q, d)</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for row in tabla_similitud %}
+					<tr>
+						<td>
+							<input type="checkbox" name="relevante{{ loop.index0 }}" value="{{ loop.index0 }}" 
+							{% if loop.index0 + 1  in max_doc_id %} checked {% endif %}
+							>
+							<input type="checkbox" name="norelevante{{ loop.index0 }}" value="{{ loop.index0 }}" {% if
+								loop.index0 +1  not in max_doc_id %} checked {% endif %}>
+
+						</td>
+						<td> {{ row[0]+1 }} </td>
+						<td>{{ row[1] }}</td>
+						<td>{{ row[2] }}</td>
+						<td>{{ row[3] }}</td>
+						<td>{{ row[4] }}</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+			:: El documento más relevante a la consulta es d{{max_doc_id}}
+			<br> <br>
+			<button type="button" class="btn btn-success" id="realimentar-btn">Realimentar Consulta</button>
+			<br> <br>
+
+			<div id="resultados-realimentados" style="display: none;">
+
+				<h3>Resultados - Consulta Realimentada</h3>
+				<h5>Nueva consulta:</h5>
+				<ul>
+					<li><span id="consulta-realimentada"> </span></li>
+				</ul>
+				<br>
+
+				<h5>Tabla de Similitud de q':</h5>
+
+				<table class="table" id="nueva-tabla">
+					<thead>
+						<tr>
+							<th>Doc.</th>
+							<th>Producto interno</th>
+							<th>|d|</th>
+							<th>|q|</th>
+							<th>sim(q, d)</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for row in tabla_similitud_nueva %}
+						<tr>
+							<td>{{ row[0] }}</td>
+							<td>{{ row[1] }}</td>
+							<td>{{ row[2] }}</td>
+							<td>{{ row[3] }}</td>
+							<td>{{ row[4] }}</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+				<br>
+
+				:: El documento más relevante a la consulta es d <span id="max-doc-r"></span>
+			</div>
+			{% endif %}
+		</div>
+
+		<button type="button" class="btn btn-secondary" id="reiniciar-btn">Reiniciar</button>
+
+
 	</div>
 
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 	<script>
+		function realimentarConsulta() {
+			const relevantes = [];
+			const noRelevantes = [];
+
+			const relevanteCheckboxes = document.querySelectorAll('input[name^="relevante"]:checked');
+			const noRelevanteCheckboxes = document.querySelectorAll('input[name^="norelevante"]:checked');
+
+			relevanteCheckboxes.forEach(function (checkbox) {
+				relevantes.push(parseInt(checkbox.value));
+			});
+
+			noRelevanteCheckboxes.forEach(function (checkbox) {
+				noRelevantes.push(parseInt(checkbox.value));
+			});
+
+			const requestData = {
+				relevantes: relevantes,
+				no_relevantes: noRelevantes
+			};
+
+			fetch('/realimentar', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(requestData)
+			})
+				.then(response => response.json())
+				.then(data => {
+					// console.log(data)
+					const nuevaTabla = document.getElementById('nueva-tabla');
+					const maxDocIdR = document.getElementById('max-doc-r');
+					maxDocIdR.textContent = data.max_doc_id_r;
+
+					const consultaRealimentada = document.getElementById('consulta-realimentada'); // Agrega un div con el id 'consulta-realimentada' en tu HTML
+					consultaRealimentada.textContent = data.terminos_qtf_nuevo;
+
+
+					data.tabla_similitud_nueva.forEach(function (row) {
+						const tr = document.createElement('tr');
+						const tdDocumento = document.createElement('td');
+						tdDocumento.textContent = row[0] + 1;
+
+						const tdProductoInterno = document.createElement('td');
+						tdProductoInterno.textContent = row[1];
+
+						const tdNormaD = document.createElement('td');
+						tdNormaD.textContent = row[2];
+
+						const tdNormaQ = document.createElement('td');
+						tdNormaQ.textContent = row[3];
+
+						const tdSimilitud = document.createElement('td');
+						tdSimilitud.textContent = row[4];
+						tr.appendChild(tdDocumento);
+						tr.appendChild(tdProductoInterno);
+						tr.appendChild(tdNormaD);
+						tr.appendChild(tdNormaQ);
+						tr.appendChild(tdSimilitud);
+						nuevaTabla.appendChild(tr);
+					});
+
+					nuevaTabla.style.display = 'block';
+				})
+				.catch(error => console.error(error));
+
+			const resultadosRealimentados = document.getElementById('resultados-realimentados');
+			resultadosRealimentados.style.display = 'block';
+		}
+		document.getElementById('realimentar-btn').addEventListener('click', realimentarConsulta);
+
+		function cargarArchivo(event, index) {
+			var archivo = event.target.files[0];
+			if (archivo) {
+				var lector = new FileReader();
+				lector.onload = function (e) {
+					var contenido = e.target.result;
+					var contenidoTextarea = document.getElementById("contenido_archivo" + index);
+					contenidoTextarea.value = contenido;  // Mostrar el contenido del archivo en el área de texto
+				};
+				lector.readAsText(archivo);
+			}
+		}
+
 		function agregarDocumentos() {
 			var numDocumentos = document.getElementById("num_documentos").value;
 			var documentosDiv = document.getElementById("documentos");
 			documentosDiv.innerHTML = "";
+			var enunciado = document.createElement("p");
+			enunciado.textContent = "Ingrese/Cargue el contenido del doc. separado por espacios ";
+			documentosDiv.appendChild(enunciado);
+
 			for (var i = 0; i < numDocumentos; i++) {
 				var documentoInput = document.createElement("input");
-				documentoInput.type = "text";
-				documentoInput.name = "documento" + i;
-				documentoInput.placeholder = (i + 1) + " Ingrese el contenido del doc. separado por espacios ";
+				documentoInput.type = "file";
+				documentoInput.name = "archivo_documento" + i;
+				documentoInput.accept = ".txt";
+
+				// Capturamos el valor actual de 'i' en una función anónima
+				(function (index) {
+					documentoInput.addEventListener("change", function (event) {
+						cargarArchivo(event, index); // Llama a cargarArchivo() cuando cambia un archivo
+					});
+				})(i);
+
+				documentosDiv.appendChild(document.createTextNode((i + 1) + " "));
 				documentosDiv.appendChild(documentoInput);
+				documentosDiv.appendChild(document.createElement("br"));
+
+				var contenidoTextarea = document.createElement("textarea");
+				contenidoTextarea.id = "contenido_archivo" + i;
+				contenidoTextarea.name = "contenido_archivo" + i;
+				contenidoTextarea.rows = 6;
+				contenidoTextarea.cols = 50;
+				documentosDiv.appendChild(contenidoTextarea);
 				documentosDiv.appendChild(document.createElement("br"));
 			}
 		}
+
+		// Agrega un event listener para el botón de reiniciar
+		const reiniciarBtn = document.getElementById('reiniciar-btn');
+		reiniciarBtn.addEventListener('click', function () {
+			const divProceso = document.getElementById('proceso');
+			if (divProceso) {
+				divProceso.remove();
+			}
+
+			fetch('/reiniciar', {
+				method: 'POST',
+			})
+				.then(response => response.json())
+				.then(data => {
+					console.log(data.mensaje); // Puedes mostrar un mensaje de confirmación si lo deseas
+				})
+				.catch(error => console.error(error));
+
+
+		});
+
 	</script>
 </body>
 
