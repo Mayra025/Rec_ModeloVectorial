@@ -4,7 +4,7 @@ import time
 
 app = Flask(__name__)
 
-COMMON_WORDS = {'a', 'al', 'con', 'de', 'del', 'el', 'en', 'es', 'estan', 'esta', 'la', 'los', 'las', 'su', 'un', 'una', 'unos', 'unas', 'tiene', 'va', 'y'}
+COMMON_WORDS = {'a', 'al', 'con', 'de', 'del', 'el', 'en', 'es', 'estan', 'esta', 'la', 'los', 'las', 'su', 'un', 'una', 'unos', 'unas', 'tiene', 'va', 'y','van', 'están'}
 consulta = ""
 vocabulario = set()  # Variable global para el vocabulario
 documentos = []  # Variable global para los documentos
@@ -92,13 +92,6 @@ def calcular_peso_tf_idf_consulta(consulta, idf, vocabulario):
     print("c= ",peso_consulta)
     return peso_consulta
 
-def calcular_vectores_documentos(frecuencias, pesos_tf_idf):
-    vectores = []
-    for frecuencia_documento, peso_documento in zip(frecuencias, pesos_tf_idf):
-        vector_documento = [tf * peso for tf, peso in zip(frecuencia_documento, peso_documento)]
-        vectores.append(vector_documento)
-    return vectores
-
 def calcular_vectores_normalizados(pesos_tf_idf_documentos, peso_tf_idf_consulta):
     norma_consulta = calcular_norma(peso_tf_idf_consulta)
     print("\n\n Vectores normalizados")
@@ -106,14 +99,14 @@ def calcular_vectores_normalizados(pesos_tf_idf_documentos, peso_tf_idf_consulta
     for vector_documento in pesos_tf_idf_documentos:
         norma_documento = calcular_norma(vector_documento)
         vector_normalizado = [componente / norma_documento for componente in vector_documento]
-        print("d=",vector_normalizado)
+        print("|d|=",norma_documento,"\n d=",vector_normalizado)
         vectores_normalizados_documentos.append(vector_normalizado)
     
     if norma_consulta != 0:
         vector_normalizado_consulta = [componente / norma_consulta for componente in peso_tf_idf_consulta]
     else:
         vector_normalizado_consulta = peso_tf_idf_consulta
-    print("c=",vector_normalizado_consulta)
+    print("|c|=",norma_consulta,"\n c=",vector_normalizado_consulta)
 
     return vectores_normalizados_documentos, vector_normalizado_consulta
 
@@ -128,13 +121,17 @@ def realimentar_consulta_relevante(relevantes, no_relevantes, vector_consulta_or
     for doc_id in relevantes:
         vector_doc_relevante = documentos[doc_id]  # Usar el vector normalizado del documento
         suma_relevantes = [a + (beta / len(relevantes)) * b for a, b in zip(suma_relevantes, vector_doc_relevante)]
-    
+
     # Calcula el término de la sumatoria de No Relevantes (−γ.∑d∈Ntf)
     suma_no_relevantes = [0] * len(vector_consulta_original)
     for doc_id in no_relevantes:
         vector_doc_no_relevante = documentos[doc_id]  # Usar el vector normalizado del documento
         suma_no_relevantes = [a - (gamma / len(no_relevantes)) * b for a, b in zip(suma_no_relevantes, vector_doc_no_relevante)]
     
+    print("\n\nq=",vector_consulta_original)
+    print("R=",suma_relevantes)
+    print("NR=",suma_no_relevantes)
+
     # Calcula el nuevo vector de consulta
     qtf_nuevo = [alpha * term + beta_term + gamma_term for term, beta_term, gamma_term in zip(vector_consulta_original, suma_relevantes, suma_no_relevantes)]
     
@@ -191,7 +188,7 @@ def realimentar_consulta():
 
     # Calcular las frecuencias de términos para los documentos y la consulta
     frecuencias_documentos = calcular_frecuencia_terminos(documentos, vocabulario)
-    frecuencias_consulta = vector_consulta_original  ##??
+    frecuencias_consulta = vector_consulta_original  #######
     print("c=",frecuencias_consulta)
 
     # Calcular el valor IDF
@@ -212,7 +209,7 @@ def realimentar_consulta():
 
     # Encontrar el documento de mayor similitud
     max_similitud = 0
-    max_doc_id_r=0
+    max_doc_id_r=[]
     for doc_id,pi,nd,nqm, similitud in tabla_similitud_nueva:
             if similitud > max_similitud:
                 max_similitud = similitud
@@ -220,7 +217,8 @@ def realimentar_consulta():
             elif similitud == max_similitud:
                 max_doc_id_r.append(doc_id+1)
     print("\nEl documento con mayor similitud es d", max_doc_id_r)
-    qtf_nuevo=[] #??
+    qtf_nuevo=[] ###################
+    
     #Tiempo
     end_time = time.time()
     execution_time = end_time - start_time
@@ -255,7 +253,6 @@ def index():
     if request.method == 'POST':
         start_time = time.time()
         num_documentos = int(request.form.get("num_documentos", 0))
-        # documentos = [eliminar_palabras_comunes(request.form['documento{}'.format(i)]) for i in range(num_documentos)]
         documentos = []
         
         for i in range(num_documentos):
@@ -295,5 +292,5 @@ def index():
 if __name__ == '__main__':
     app.run(debug=True)
 
-#OBS: NO recargar la pagina, los datos previos se guardan .. no generá error en un nuevo cálculo pero puede ser confuso para el usuario
+#OBS: NO recargar la pagina, los datos previos se guardan .. no generá error para una nueva Realimentación pero puede ser confuso para el usuario
 #la tabla de reconsulta se va aumentado si se Realimenta de nuevo

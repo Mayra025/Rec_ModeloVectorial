@@ -77,11 +77,8 @@
 					{% for row in tabla_similitud %}
 					<tr>
 						<td>
-							<input type="checkbox" name="relevante{{ loop.index0 }}" value="{{ loop.index0 }}" 
-							{% if loop.index0 + 1  in max_doc_id %} checked {% endif %}
-							>
-							<input type="checkbox" name="norelevante{{ loop.index0 }}" value="{{ loop.index0 }}" {% if
-								loop.index0 +1  not in max_doc_id %} checked {% endif %}>
+							<input type="checkbox" name="relevante{{ loop.index0 }}" value="{{ loop.index0 }}">
+							<input type="checkbox" name="norelevante{{ loop.index0 }}" value="{{ loop.index0 }}">
 
 						</td>
 						<td> {{ row[0]+1 }} </td>
@@ -99,16 +96,13 @@
 			<br> <br>
 
 			<div id="resultados-realimentados" style="display: none;">
-
 				<h3>Resultados - Consulta Realimentada</h3>
 				<h5>Nueva consulta:</h5>
 				<ul>
 					<li><span id="consulta-realimentada"> </span></li>
 				</ul>
 				<br>
-
 				<h5>Tabla de Similitud de q':</h5>
-
 				<table class="table" id="nueva-tabla">
 					<thead>
 						<tr>
@@ -132,15 +126,11 @@
 					</tbody>
 				</table>
 				<br>
-
 				:: El documento más relevante a la consulta es d <span id="max-doc-r"></span>
 			</div>
 			{% endif %}
 		</div>
-
 		<button type="button" class="btn btn-secondary" id="reiniciar-btn">Reiniciar</button>
-
-
 	</div>
 
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
@@ -174,14 +164,11 @@
 			})
 				.then(response => response.json())
 				.then(data => {
-					// console.log(data)
 					const nuevaTabla = document.getElementById('nueva-tabla');
 					const maxDocIdR = document.getElementById('max-doc-r');
 					maxDocIdR.textContent = data.max_doc_id_r;
-
 					const consultaRealimentada = document.getElementById('consulta-realimentada'); // Agrega un div con el id 'consulta-realimentada' en tu HTML
 					consultaRealimentada.textContent = data.terminos_qtf_nuevo;
-
 
 					data.tabla_similitud_nueva.forEach(function (row) {
 						const tr = document.createElement('tr');
@@ -280,10 +267,7 @@
 					console.log(data.mensaje); // Puedes mostrar un mensaje de confirmación si lo deseas
 				})
 				.catch(error => console.error(error));
-
-
 		});
-
 	</script>
 </body>
 
